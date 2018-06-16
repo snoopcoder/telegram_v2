@@ -266,8 +266,34 @@ async function GiveData() {
   return JSON.stringify(All);
 }
 
+async function PutBase(Item) {
+  let q = dedent`
+    INSERT INTO  ${tableName} SET 
+    pool_id=1,
+    on_date=?,
+    balance=?,
+    balance_immature=?,   
+    coinsPer24hByPool=?,
+    HashrateTotal=?,
+    workers=?`;
+  //await myconnection.Insert(q, param);
+  try {
+    let result = await query(q, [
+      Item.ETHOnDate,
+      Item.ETHbalance,
+      Item.ETHimmature_earning,
+      Item.ETHcoinsPer24h,
+      Item.ETHcurrentHashrate,
+      JSON.stringify(Item.EthWorkersJSON)
+    ]);
+  } catch (e) {
+    console.log(e);
+  }
+}
+
 async function start() {
   let Item = await GrubMiners();
+  await PutBase(Item);
   //await PutBase(Item);
 }
 
