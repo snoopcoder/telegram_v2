@@ -86,9 +86,9 @@ new CronJob("*/10 * * * *", Every10min, null, true, "Asia/Novosibirsk");
 new CronJob("*/1 * * * *", Every1min, null, true, "Asia/Novosibirsk");
 new CronJob("0 3 * * *", Every1day, null, true, "Asia/Novosibirsk");
 ///////
-
+process.env.myDebug && console.log("Started in Debug mode");
 TelagramWorker();
 
-//GetClaymore();
+GetClaymore();
 
 //SELECT id FROM poolsdata ORDER BY id DESC LIMIT 1;

@@ -200,7 +200,47 @@ function gpuinfo(sensors) {
   return res;
 }
 
+async function GrubMiners() {
+  let All = {
+    rigs: []
+  };
+  for (let rig in rigs) {
+    //console.log(rigs[rig].name, rigs[rig].adress);
+    let res = "";
+    let rigObj = {
+      name: "",
+      status: "",
+      totalHashrate: 0,
+      shares_good: 0,
+      shares_rej: 0,
+      share_inv: 0,
+      gpu_array: []
+    };
+    try {
+      res = await GetData(rigs[rig].adress, "3333");
+    } catch (e) {
+      console.log("connection error", rigs[rig].adress, e);
+      rigObj.name = rigs[rig].name;
+      rigObj.status = "connection error";
+
+      //All =
+      continue;
+    }
+    let RigInfo = toStatsJson(res);
+    rigObj.name = rigs[rig].name;
+    rigObj.status = "ok";
+    rigObj.totalHashrate = RigInfo.ethash.hashrate;
+    rigObj.shares_good = RigInfo.ethash.shares.successful;
+    rigObj.shares_rej = RigInfo.ethash.shares.rejected;
+    rigObj.share_inv = RigInfo.ethash.shares.invalid;
+    rigObj.gpu_array = RigInfo.sensors;
+    All.rigs.push(rigObj);
+  }
+  return All;
+}
+
 async function GiveData() {
+  // РАЗДЕЛИТЬ ЭТУ ФУНКЦИЮ НА ДВЕ
   let All = "";
   for (let rig in rigs) {
     //console.log(rigs[rig].name, rigs[rig].adress);
@@ -223,11 +263,11 @@ async function GiveData() {
     sensor ${gpuinfo(RigInfo.sensors)}` + "\n";
     All = All + Mess;
   }
-  return All;
+  return JSON.stringify(All);
 }
 
 async function start() {
-  let Item = await GiveData();
+  let Item = await GrubMiners();
   //await PutBase(Item);
 }
 
