@@ -56,6 +56,7 @@ var GetCurrencyPrise = require("./workers/GetCurrencyPrise");
 var TelagramWorker = require("./workers/TelagramWorker");
 var GetInternetBalance = require("./workers/GetInternetBalance");
 var GetClaymore = require("./workers/GetClaymore");
+var APIworker = require("./api");
 
 function Every10min() {
   process.env.myDebug || WorkerGetDataFromPool();
@@ -89,5 +90,6 @@ new CronJob("0 3 * * *", Every1day, null, true, "Asia/Novosibirsk");
 ///////
 process.env.myDebug && console.log("Started in Debug mode");
 TelagramWorker();
+APIworker();
 
 //SELECT id FROM poolsdata ORDER BY id DESC LIMIT 1;
