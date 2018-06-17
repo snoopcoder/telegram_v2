@@ -8,7 +8,6 @@
     "moment": "^2.22.1",
     "mysql-query-promise": "^1.0.1",
     "node-telegram-bot-api": "^0.30.0",
-    "phin": "^2.9.0",
-    "webshot": "^0.18.0"
+    "phin": "^2.9.0"
   }
 }
