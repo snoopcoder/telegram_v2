@@ -292,6 +292,10 @@ async function PutBase(Item) {
 }
 
 async function start() {
+//получить список ригов
+//пройти по списку, для каждого рика получить данные и положить их базу
+
+
   let Item = await GrubMiners();
   await PutBase(Item);
   //await PutBase(Item);
