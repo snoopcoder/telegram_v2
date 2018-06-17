@@ -1,8 +1,10 @@
 const Koa = require("koa");
+const cors = require("@koa/cors");
 var config = require("config");
 const routes = require("./middleware/routes");
 const Err = require("./middleware/error");
 const app = new Koa();
+app.use(cors());
 function start() {
   app.use(routes());
   app.use(Err);
