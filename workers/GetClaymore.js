@@ -251,7 +251,6 @@ async function PutBase(Item) {
 async function start() {
   let RigList = await GetRigList();
   let Item = await GrubMiners(RigList);
-  console.log(Item);
   await PutBase(Item);
 }
 
