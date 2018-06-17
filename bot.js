@@ -66,6 +66,7 @@ function Every10min() {
 }
 
 function Every1min() {
+  process.env.myDebug || GetClaymore();
   process.env.myDebug || GetCurrencyPrise();
   console.log(
     moment().format("YYYY-MM-DD HH:mm:ss"),
@@ -88,7 +89,5 @@ new CronJob("0 3 * * *", Every1day, null, true, "Asia/Novosibirsk");
 ///////
 process.env.myDebug && console.log("Started in Debug mode");
 TelagramWorker();
-
-GetClaymore();
 
 //SELECT id FROM poolsdata ORDER BY id DESC LIMIT 1;

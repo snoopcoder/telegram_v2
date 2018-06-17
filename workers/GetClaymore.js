@@ -4,40 +4,7 @@ var config = require("config");
 const dedent = require("dedent");
 var moment = require("moment");
 
-let rigs = {
-  rig1: {
-    name: "rig1",
-    adress: "192.168.88.27"
-  },
-  rig2: {
-    name: "rig2",
-    adress: "192.168.88.22"
-  },
-  rig3: {
-    name: "rig3",
-    adress: "192.168.88.21"
-  },
-  rig4: {
-    name: "rig4",
-    adress: "192.168.88.20"
-  },
-  rig1_2: {
-    name: "rig1-2",
-    adress: "192.168.88.50"
-  },
-  inv1: {
-    name: "inv1",
-    adress: "192.168.88.13"
-  },
-  test: {
-    name: "test",
-    adress: "192.168.88.15"
-  }
-};
-
 const timeout = 5000;
-//const port = "3333";
-//const host = "192.168.88.22";
 
 function GetData(host, port) {
   let MyPromis = new Promise((resolve, reject) => {
@@ -200,16 +167,19 @@ function gpuinfo(sensors) {
   return res;
 }
 
-async function GrubMiners() {
+async function GrubMiners(rigs) {
   let All = {
     rigs: []
   };
-  for (let rig in rigs) {
+  for (let rig of rigs) {
     //console.log(rigs[rig].name, rigs[rig].adress);
     let res = "";
     let rigObj = {
       name: "",
       status: "",
+      claymoreVersion: "",
+      pool: "",
+      uptime: 0,
       totalHashrate: 0,
       shares_good: 0,
       shares_rej: 0,
@@ -217,18 +187,20 @@ async function GrubMiners() {
       gpu_array: []
     };
     try {
-      res = await GetData(rigs[rig].adress, "3333");
+      res = await GetData(rig.address, "3333");
     } catch (e) {
-      console.log("connection error", rigs[rig].adress, e);
-      rigObj.name = rigs[rig].name;
+      console.log("connection error", rig.address, e);
+      rigObj.name = rig.name;
       rigObj.status = "connection error";
-
-      //All =
+      All.rigs.push(rigObj);
       continue;
     }
     let RigInfo = toStatsJson(res);
-    rigObj.name = rigs[rig].name;
+    rigObj.name = rig.name;
     rigObj.status = "ok";
+    rigObj.claymoreVersion = RigInfo.claymoreVersion;
+    rigObj.uptime = RigInfo.uptime;
+    rigObj.pool = RigInfo.ethash.pool;
     rigObj.totalHashrate = RigInfo.ethash.hashrate;
     rigObj.shares_good = RigInfo.ethash.shares.successful;
     rigObj.shares_rej = RigInfo.ethash.shares.rejected;
@@ -239,67 +211,69 @@ async function GrubMiners() {
   return All;
 }
 
-async function GiveData() {
-  // РАЗДЕЛИТЬ ЭТУ ФУНКЦИЮ НА ДВЕ
+async function GiveData(rigs) {
   let All = "";
-  for (let rig in rigs) {
+  for (let rig of rigs) {
     //console.log(rigs[rig].name, rigs[rig].adress);
     let res = "";
     try {
-      res = await GetData(rigs[rig].adress, "3333");
+      res = await GetData(rig.address, "3333");
     } catch (e) {
-      console.log("connection error", rigs[rig].adress, e);
-      All +=
-        "--------\n" + rigs[rig].name + ":\nconnection error \n" + e + "\n";
+      console.log("connection error", rig.address, e);
+      All += "--------\n" + rig.name + ":\nconnection error \n" + e + "\n";
       continue;
     }
     let RigInfo = toStatsJson(res);
     let Mess =
       dedent`--------
-    ${rigs[rig].name}:   ${RigInfo.ethash.hashrate}MH 
+    ${rig.name}:   ${RigInfo.ethash.hashrate}MH 
     shares: ${RigInfo.ethash.shares.successful}   rejected: ${
         RigInfo.ethash.shares.rejected
       } invalid: ${RigInfo.ethash.shares.invalid}
     sensor ${gpuinfo(RigInfo.sensors)}` + "\n";
     All = All + Mess;
   }
-  return JSON.stringify(All);
+  return All;
 }
 
 async function PutBase(Item) {
   let q = dedent`
-    INSERT INTO  ${tableName} SET 
-    pool_id=1,
-    on_date=?,
-    balance=?,
-    balance_immature=?,   
-    coinsPer24hByPool=?,
-    HashrateTotal=?,
-    workers=?`;
+    INSERT INTO rigsdata SET     
+    data=?`;
   //await myconnection.Insert(q, param);
   try {
-    let result = await query(q, [
-      Item.ETHOnDate,
-      Item.ETHbalance,
-      Item.ETHimmature_earning,
-      Item.ETHcoinsPer24h,
-      Item.ETHcurrentHashrate,
-      JSON.stringify(Item.EthWorkersJSON)
-    ]);
+    let result = await query(q, [JSON.stringify(Item)]);
   } catch (e) {
     console.log(e);
   }
 }
 
 async function start() {
-//получить список ригов
-//пройти по списку, для каждого рика получить данные и положить их базу
-
-
-  let Item = await GrubMiners();
+  let RigList = await GetRigList();
+  let Item = await GrubMiners(RigList);
+  console.log(Item);
   await PutBase(Item);
-  //await PutBase(Item);
+}
+
+async function GetRigList() {
+  //сделать запрос в базу
+  q = dedent`
+    SELECT name,address from rigs;`;
+  let RigList = [];
+  try {
+    RigList = await query(q);
+  } catch (e) {
+    console.log("Ошибка получения списка ригов", e);
+    return 0;
+  }
+
+  return RigList;
+}
+
+async function GiveDataWrapper() {
+  let RigList = await GetRigList();
+  return await GiveData(RigList);
 }
 
 module.exports = start;
-module.exports.GetData = GiveData;
+module.exports.GetData = GiveDataWrapper;
