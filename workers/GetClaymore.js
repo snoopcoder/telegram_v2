@@ -4,7 +4,7 @@ var config = require("config");
 const dedent = require("dedent");
 var moment = require("moment");
 
-const timeout = 5000;
+const timeout = 1000;
 
 function GetData(host, port) {
   let MyPromis = new Promise((resolve, reject) => {
@@ -197,6 +197,7 @@ async function GrubMiners(rigs) {
     }
     let RigInfo = toStatsJson(res);
     rigObj.name = rig.name;
+    rigObj.address = rig.address;
     rigObj.status = "ok";
     rigObj.claymoreVersion = RigInfo.claymoreVersion;
     rigObj.uptime = RigInfo.uptime;
