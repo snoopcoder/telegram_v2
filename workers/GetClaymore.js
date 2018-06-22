@@ -207,6 +207,7 @@ async function GrubMiners(rigs) {
     rigObj.shares_rej = RigInfo.ethash.shares.rejected;
     rigObj.share_inv = RigInfo.ethash.shares.invalid;
     rigObj.gpu_array = RigInfo.sensors;
+    rigObj.ondate = moment().format("YYYY-MM-DD HH:mm:ss");
     All.rigs.push(rigObj);
   }
   return All;
