@@ -52,51 +52,72 @@ function FixLength(STRm, column) {
 }
 
 async function PrepareMess(infoType) {
-  let Mess = "Bad";
-  let data = await GetDataFromPool.GetPoolData(1);
-  let OnDate = moment(data.on_date);
-  //format("YYYY-MM-DD HH:mm:ss"), diff
-  OnDate = OnDate.format("YYYY-MM-DD HH:mm:ss");
-  let IsActaul = moment(moment().format("YYYY-MM-DD HH:mm:ss")).diff(
-    OnDate,
-    "minutes"
-  );
-  IsActaul = IsActaul < 15 ? true : false;
+  let Mess = "";
+  //какие пулы актуальны
+  let ActivePoolList = await GetDataFromPool.GetActivePoolList();
+  let poolsArray = [];
+  //получить данные о каждом
+  for (pool of ActivePoolList) {
+    let data = await GetDataFromPool.GetPoolData(pool.id);
+    let OnDate = moment(data.on_date);
+    OnDate = OnDate.format("YYYY-MM-DD HH:mm:ss");
+    let IsActaul = moment(moment().format("YYYY-MM-DD HH:mm:ss")).diff(
+      OnDate,
+      "minutes"
+    );
+    IsActaul = IsActaul < 15 ? true : false;
+    let poolData = {};
+    poolData.name = pool.name;
+    poolData.OnDate = OnDate;
+    poolData.IsActaul = IsActaul;
+    poolData.data = data;
+    poolsArray.push(poolData);
+  }
+  //собрать сообщение
   switch (infoType) {
     case "pool": {
       let curr_last = await GetCurrencyPrise.GetPrise("ETH");
-      Mess = dedent`
-    <pre>Pool:     dwarfpool.com/eth
-    Hashrate: ${data.HashrateTotal}Mh
-    Profit: ${data.coinsPer24hByPool}ETH(${data.coinsPer24hByPool *
-        curr_last}$)  
-    Balance:  ${data.balance + data.balance_immature}</pre>`;
-      if (!IsActaul) Mess = "\u26A0 данные не актуальны \n" + Mess;
+      for (pool of poolsArray) {
+        Mess =
+          dedent`
+        <pre>Pool:     ${pool.name}
+        Hashrate: ${pool.data.HashrateTotal}Mh
+        Profit: ${pool.data.coinsPer24hByPool}ETH(${(
+            pool.data.coinsPer24hByPool * curr_last
+          ).toFixed(1)}$)  
+        Balance:  ${pool.data.balance + pool.data.balance_immature}</pre>` +
+          "\n" +
+          Mess;
+        if (!pool.IsActaul) Mess = "\u26A0 данные не актуальны \n" + Mess;
+      }
       break;
     }
     case "miners": {
-      let workers = JSON.parse(data.workers);
-      let RigMessAll = dedent`<pre> Name      Hashrate   Old
-        ----------------------------</pre>`;
+      for (pool of poolsArray) {
+        let data = pool.data;
+        let workers = JSON.parse(data.workers);
+        let RigMessAll = dedent`<pre> Name      Hashrate   Old
+          ----------------------------</pre>`;
 
-      for (let rigId in workers) {
-        let rig = workers[rigId];
-        let RigMess = dedent`<pre>${
-          rig.alive ? "\u{2705}" : "\u{1F534}"
-        } ${FixLength(rig.worker, "Name")} ${FixLength(
-          Math.floor(rig.hashrate) +
-            "[" +
-            Math.floor(rig.hashrate_calculated) +
-            "]Mh",
-          "Hashrate"
-        )} ${fixTime(rig.second_since_submit)}
-        ----------------------------</pre>`;
-        RigMessAll = RigMessAll + RigMess;
+        for (let rigId in workers) {
+          let rig = workers[rigId];
+          let RigMess = dedent`<pre>${
+            rig.alive ? "\u{2705}" : "\u{1F534}"
+          } ${FixLength(rig.worker, "Name")} ${FixLength(
+            Math.floor(rig.hashrate) +
+              "[" +
+              Math.floor(rig.hashrate_calculated) +
+              "]Mh",
+            "Hashrate"
+          )} ${fixTime(rig.second_since_submit)}
+          ----------------------------</pre>`;
+          RigMessAll = RigMessAll + RigMess;
+        }
+        if (!pool.IsActaul)
+          RigMessAll = "\u26A0 данные не актуальны \n" + RigMessAll;
+        Mess = Mess + "<pre>" + pool.name + "\n</pre>" + RigMessAll;
       }
 
-      //RigMessAll = RigMessAll + "</pre>";
-      Mess = RigMessAll;
-      if (!IsActaul) Mess = "\u26A0 данные не актуальны \n" + Mess;
       break;
     }
     case "report": {
@@ -193,7 +214,8 @@ async function start() {
       default: {
         bot.sendMessage(
           chatId,
-          dedent`${"\u{1F916}"} команда нераспознана, мне далеко до сири((`,
+          dedent`${"\u{1F916}"} команда нераспознана, мне далеко до сири((
+            все что я могу /start`,
           {
             parse_mode: "HTML"
           }

@@ -249,10 +249,77 @@ async function PutBase(Item) {
     console.log(e);
   }
 }
+async function PutBasePool(poolName) {
+  //set pool as working
+  console.log(id[0].id);
+}
+
+async function GetPoolId(poolName) {
+  //get pool id
+  let q = dedent`
+  SELECT id FROM pools WHERE name=?`;
+  //await myconnection.Insert(q, param);
+  let id = "";
+  try {
+    id = await query(q, [poolName]);
+  } catch (e) {
+    console.log("не найден id пула PutBasePool(в GetClaymore.js)", e);
+    return -1;
+  }
+  id = id[0].id;
+  return id;
+}
+
+async function isMy(rigName) {
+  //get pool id
+  let q = dedent`
+   SELECT ismy FROM rigs WHERE name=?`;
+  //await myconnection.Insert(q, param);
+  let data = "";
+  try {
+    data = await query(q, [rigName]);
+  } catch (e) {
+    console.log("не найден ismy рига isMy(в GetClaymore.js)", e);
+    return -1;
+  }
+  let ismy = Number(data[0].ismy);
+  return ismy;
+}
+
+async function GetCurrentPoolList(Items) {
+  //вытащить все пулы из данных собраных с ригов, на которые работают мои майнеры
+  let poollist = [];
+  for (rigdata of Items.rigs) {
+    //проверка чтобы не попал риг к которому не удалось подлключиться и только свои риги
+    let ismy = await isMy(rigdata.name);
+    if (ismy == 1 && rigdata.pool != "") {
+      poollist.push(rigdata.pool);
+    }
+  }
+  //оставим только уникальные пулы
+  poollist = unique(poollist);
+  idlist = [];
+  for (pool of poollist) {
+    let id = await GetPoolId(pool);
+    if (id >= 0) idlist.push(id);
+  }
+  return idlist;
+}
+
+function unique(arr) {
+  var obj = {};
+
+  for (var i = 0; i < arr.length; i++) {
+    var str = arr[i];
+    obj[str] = true;
+  }
+
+  return Object.keys(obj);
+}
 
 async function start() {
   let RigList = await GetRigList();
-  let Item = await GrubMiners(RigList);
+  let Items = await GrubMiners(RigList);
   await PutBase(Item);
 }
 

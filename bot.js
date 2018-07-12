@@ -91,5 +91,8 @@ new CronJob("0 3 * * *", Every1day, null, true, "Asia/Novosibirsk");
 process.env.myDebug && console.log("Started in Debug mode");
 TelagramWorker();
 APIworker();
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+WorkerGetDataFromPool();
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 //SELECT id FROM poolsdata ORDER BY id DESC LIMIT 1;
