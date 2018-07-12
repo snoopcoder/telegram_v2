@@ -320,7 +320,7 @@ function unique(arr) {
 async function start() {
   let RigList = await GetRigList();
   let Items = await GrubMiners(RigList);
-  await PutBase(Item);
+  await PutBase(Items);
 }
 
 async function GetRigList() {
