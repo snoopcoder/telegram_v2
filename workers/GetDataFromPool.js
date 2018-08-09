@@ -34,7 +34,7 @@ async function GetWeb(pool) {
   switch (pool) {
     case "eth-ru2.dwarfpool.com:8008": {
       url =
-        "http://dwarfpool.com/eth/api?wallet=0x1e758cc212cf5e2af9cd04e9aca388a9d1cc6e77&email=eth@example.com";
+        "http://dwarfpool.com/eth/api?wallet=e388da368b2d063bBA3376C4b9776deF0f30715b&email=snoopcode@gmail.com";
 
       let res = {};
       try {
@@ -66,9 +66,9 @@ async function GetWeb(pool) {
     } //https://api.ethermine.org/miner/0x1e758Cc212Cf5e2af9cd04E9ACA388a9d1cc6E77/workers/
     case "eu1.ethermine.org:4444": {
       urlCommon =
-        "https://api.ethermine.org/miner/0x1e758Cc212Cf5e2af9cd04E9ACA388a9d1cc6E77/currentStats";
+        "https://api.ethermine.org/miner/e388da368b2d063bBA3376C4b9776deF0f30715b/currentStats";
       urlWorker =
-        "https://api.ethermine.org/miner/0x1e758Cc212Cf5e2af9cd04E9ACA388a9d1cc6E77/workers";
+        "https://api.ethermine.org/miner/e388da368b2d063bBA3376C4b9776deF0f30715b/workers";
 
       let resCommon = {};
       let resWorkers = {};
