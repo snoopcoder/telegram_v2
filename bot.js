@@ -57,9 +57,11 @@ var TelagramWorker = require("./workers/TelagramWorker");
 var GetInternetBalance = require("./workers/GetInternetBalance");
 var GetClaymore = require("./workers/GetClaymore");
 var APIworker = require("./api");
+var GetWallets = require("./workers/GetWallets");
 
 function Every10min() {
   process.env.myDebug || WorkerGetDataFromPool();
+  process.env.myDebug || GetCurrencyPrise();
   console.log(
     moment().format("YYYY-MM-DD HH:mm:ss"),
     "запуск служб в интервале 10 минут"
@@ -68,7 +70,6 @@ function Every10min() {
 
 function Every1min() {
   process.env.myDebug || GetClaymore();
-  process.env.myDebug || GetCurrencyPrise();
   console.log(
     moment().format("YYYY-MM-DD HH:mm:ss"),
     "запуск служб в интервале 1 минуты"
@@ -91,3 +92,5 @@ new CronJob("0 3 * * *", Every1day, null, true, "Asia/Novosibirsk");
 process.env.myDebug && console.log("Started in Debug mode");
 TelagramWorker();
 APIworker();
+///!!!!!!!!!!
+GetWallets();
