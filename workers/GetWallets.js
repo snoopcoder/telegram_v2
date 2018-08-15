@@ -81,24 +81,41 @@ async function GivePoolData(pool_id) {
   return data;
 }
 
-async function GiveWalletsData() {
+async function GiveBalances() {
   q = dedent`
-  SELECT * from wallets WHERE work =1`;
-  let data = {};
+SELECT walletsdata.id,
+  curr_id,
+  walletsdata.data,
+  walletsdata.wallet_id,
+  inline.name,
+  factor,
+  walletsdata.balance,
+  symbol
+FROM walletsdata
+JOIN
+(SELECT wallet_id,
+     max(DATA) AS DATA,
+WORK,
+     name,
+     factor,
+     curr_id
+FROM walletsdata
+JOIN wallets ON walletsdata.wallet_id = wallets.id
+WHERE
+WORK=1
+GROUP BY wallet_id) AS inline ON walletsdata.wallet_id = inline.wallet_id
+AND walletsdata.data = inline.data
+JOIN currencies ON currencies.id=curr_id;;`;
+  let BalancesList = [];
   try {
     let result = await query(q);
-    data = result;
+    BalancesList = result;
   } catch (e) {
-    console.log(
-      "Ошибка получения списка рабочих пулов из базы GiveActiveWalletsList (In GetWalletsData.js)",
-      e
-    );
+    console.log("Ошибка получения списка валют", e);
     return 0;
   }
-
-  //вернуть данные
-  return data;
+  return BalancesList;
 }
 
 module.exports = start;
-//module.exports.GetWalletsData = GiveWalletsData;
+module.exports.GetBalances = GiveBalances;

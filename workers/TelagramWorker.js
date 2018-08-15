@@ -8,6 +8,7 @@ var GetCurrencyPrise = require("./GetCurrencyPrise.js");
 var GetDataFromPool = require("./GetDataFromPool.js");
 var GetInternetBalance = require("./GetInternetBalance");
 var GetClaymore = require("./GetClaymore");
+var GetWallets = require("./GetWallets");
 
 function fixTime(time) {
   let quotient = Math.floor(time / 60);
@@ -24,7 +25,6 @@ function FixLength(STRm, column) {
     Hashrate: 10,
     Old: 6
   };
-  let defdf = str.length;
   switch (column) {
     case "Name": {
       if (str.length < LengthBook.Name) {
@@ -49,6 +49,14 @@ function FixLength(STRm, column) {
     }
   }
   return str;
+}
+function IsActaul(OnDate) {
+  let IsActaul = moment(moment().format("YYYY-MM-DD HH:mm:ss")).diff(
+    OnDate,
+    "minutes"
+  );
+  IsActaul = IsActaul < 15 ? true : false;
+  return IsActaul;
 }
 
 async function PrepareMess(infoType) {
@@ -138,6 +146,46 @@ async function PrepareMess(infoType) {
       Mess = Mess + Cleymoredata;
       break;
     }
+    case "finance": {
+      let Total = 0;
+      let curr_last = await GetCurrencyPrise.GetPrise("ETH");
+      for (pool of poolsArray) {
+        Total += Number(pool.data.balance + pool.data.balance_immature);
+        Mess =
+          dedent`
+        <pre>Pool:   ${pool.name} 
+        Balance:  ${(pool.data.balance + pool.data.balance_immature).toFixed(
+          4
+        )}</pre>` +
+          "\n" +
+          Mess;
+        if (!pool.IsActaul) Mess = "\u26A0 данные не актуальны \n" + Mess;
+      }
+      //wallets
+      let BalancesList = await GetWallets.GetBalances();
+      for (wallet of BalancesList) {
+        curr_last = await GetCurrencyPrise.GetPrise(wallet.symbol);
+        let WalletBalance = (wallet.balance / wallet.factor).toFixed(4);
+        Total += Number(WalletBalance);
+        Mess =
+          dedent`
+      <pre>Wallet: ${wallet.name} 
+      Balance:  ${WalletBalance}</pre>` +
+          "\n" +
+          Mess;
+        let isActaul = IsActaul(wallet.data);
+        if (!isActaul) Mess = "\u26A0 данные не актуальны \n" + Mess;
+      }
+      Mess =
+        dedent`
+  <pre>Total: ${Total.toFixed(4)}ETH/ ${(Total * curr_last).toFixed(
+          0
+        )}USD</pre>` +
+        "\n" +
+        Mess;
+
+      break;
+    }
   }
   return Mess;
 }
@@ -197,13 +245,21 @@ async function start() {
         });
         break;
       }
+      case "finance": {
+        Msg = await PrepareMess("finance");
+        bot.sendMessage(chatId, Msg, {
+          parse_mode: "HTML"
+        });
+        break;
+      }
       case "/start": {
         var option = {
           parse_mode: "HTML",
           reply_markup: {
             keyboard: [
               [{ text: "pool info" }, { text: "miners info" }],
-              [{ text: "report" }]
+              [{ text: "report" }],
+              [{ text: "finance" }]
             ],
             resize_keyboard: true
           }

@@ -62,6 +62,7 @@ var GetWallets = require("./workers/GetWallets");
 function Every10min() {
   process.env.myDebug || WorkerGetDataFromPool();
   process.env.myDebug || GetCurrencyPrise();
+  process.env.myDebug || GetWallets();
   console.log(
     moment().format("YYYY-MM-DD HH:mm:ss"),
     "запуск служб в интервале 10 минут"
@@ -92,5 +93,3 @@ new CronJob("0 3 * * *", Every1day, null, true, "Asia/Novosibirsk");
 process.env.myDebug && console.log("Started in Debug mode");
 TelagramWorker();
 APIworker();
-///!!!!!!!!!!
-GetWallets();
